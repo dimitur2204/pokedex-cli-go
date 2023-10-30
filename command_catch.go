@@ -22,7 +22,7 @@ func commandCatch(cfg *config, args []string) error {
 	catchChance := (MAX_BASE_EXP / pokemonResp.BaseExperience) * 10
 	if catchChance > r.Intn(100) {
 		fmt.Println("You caught a " + pokemonResp.Name + "!")
-		cfg.pokedex = append(cfg.pokedex, pokemonResp)
+		cfg.pokedex[pokemonResp.Name] = pokemonResp
 		fmt.Println("You have " + fmt.Sprint(len(cfg.pokedex)) + " pokemon in your pokedex")
 	} else {
 		fmt.Println("The " + pokemonResp.Name + " got away!")
