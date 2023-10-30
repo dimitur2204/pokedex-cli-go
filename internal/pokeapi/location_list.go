@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
 
 	"github.com/dimitur2204/pokedex-cli-go/internal/pokeapi/internal/pokecache"
 )
@@ -17,13 +16,12 @@ func (c *Client) ListLocations(pageURL *string, cache *pokecache.Cache) (RespSha
 		url = *pageURL
 	}
 
-	mux := &sync.Mutex{}
-	cached, ok := cache.Get(url, mux)
+	cached, ok := cache.Get(url)
 
 	locationsResp := RespShallowLocations{}
 	if ok {
 		fmt.Println("Cachehit")
-		err := json.Unmarshal(*cached, &locationsResp)
+		err := json.Unmarshal(cached, &locationsResp)
 		if err != nil {
 			return RespShallowLocations{}, err
 		}
@@ -50,6 +48,6 @@ func (c *Client) ListLocations(pageURL *string, cache *pokecache.Cache) (RespSha
 		return RespShallowLocations{}, err
 	}
 
-	cache.Set(url, &dat, mux)
+	cache.Set(url, dat)
 	return locationsResp, nil
 }

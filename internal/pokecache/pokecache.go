@@ -7,13 +7,14 @@ import (
 
 type cacheEntry struct {
 	createdAt time.Time
-	data      *[]byte
+	data      []byte
 }
 
 // Client -
 type Cache struct {
 	entries  map[string]cacheEntry
 	interval time.Duration
+	mux      *sync.Mutex
 }
 
 // NewClient -
@@ -21,39 +22,40 @@ func NewCache(interval time.Duration) Cache {
 	cache := Cache{
 		interval: interval,
 		entries:  make(map[string]cacheEntry),
+		mux:      &sync.Mutex{},
 	}
-	go cache.reapLoop(&sync.Mutex{})
+	go cache.reapLoop()
 	return cache
 }
 
-func (c *Cache) Get(key string, mux *sync.Mutex) (*[]byte, bool) {
-	mux.Lock()
+func (c *Cache) Get(key string) ([]byte, bool) {
+	c.mux.Lock()
 	entry, ok := c.entries[key]
-	mux.Unlock()
+	c.mux.Unlock()
 	return entry.data, ok
 }
 
-func (c *Cache) Set(key string, data *[]byte, mux *sync.Mutex) {
-	mux.Lock()
+func (c *Cache) Set(key string, data []byte) {
+	c.mux.Lock()
 	c.entries[key] = cacheEntry{
 		createdAt: time.Now(),
 		data:      data,
 	}
-	mux.Unlock()
+	c.mux.Unlock()
 }
 
-func (c *Cache) Delete(key string, mux *sync.Mutex) {
-	mux.Lock()
+func (c *Cache) Delete(key string) {
+	c.mux.Lock()
 	delete(c.entries, key)
-	mux.Unlock()
+	c.mux.Unlock()
 }
 
-func (c *Cache) reapLoop(mux *sync.Mutex) {
+func (c *Cache) reapLoop() {
 	for {
 		time.Sleep(c.interval)
 		for k, e := range c.entries {
 			if e.createdAt.Add(c.interval).Before(time.Now()) {
-				c.Delete(k, mux)
+				c.Delete(k)
 			}
 		}
 	}

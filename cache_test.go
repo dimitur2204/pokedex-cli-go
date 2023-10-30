@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 	"time"
 
@@ -27,16 +26,15 @@ func TestAddGet(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		mux := &sync.Mutex{}
 		t.Run(fmt.Sprintf("Test case %v", i), func(t *testing.T) {
 			cache := pokecache.NewCache(interval)
-			cache.Set(c.key, &c.val, mux)
-			val, ok := cache.Get(c.key, mux)
+			cache.Set(c.key, c.val)
+			val, ok := cache.Get(c.key)
 			if !ok {
 				t.Errorf("expected to find key")
 				return
 			}
-			if string(*val) != string(c.val) {
+			if string(val) != string(c.val) {
 				t.Errorf("expected to find value")
 				return
 			}
@@ -48,11 +46,10 @@ func TestReapLoop(t *testing.T) {
 	const baseTime = 5 * time.Millisecond
 	const waitTime = baseTime + 5*time.Millisecond
 	cache := pokecache.NewCache(baseTime)
-	mux := &sync.Mutex{}
 	data := []byte("testdata")
-	cache.Set("https://example.com", &data, mux)
+	cache.Set("https://example.com", data)
 
-	_, ok := cache.Get("https://example.com", mux)
+	_, ok := cache.Get("https://example.com")
 	if !ok {
 		t.Errorf("expected to find key")
 		return
@@ -60,7 +57,7 @@ func TestReapLoop(t *testing.T) {
 
 	time.Sleep(waitTime)
 
-	_, ok = cache.Get("https://example.com", mux)
+	_, ok = cache.Get("https://example.com")
 	if ok {
 		t.Errorf("expected to not find key")
 		return
