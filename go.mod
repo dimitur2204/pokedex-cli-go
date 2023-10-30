@@ -1,3 +1,3 @@
-module github.com/dimitur2204/pokedex-cli-go
+module github.com/dimitur2204/pokedex-cli-go/internal/pokeapi
 
-go 1.21.3
+go 1.21
